@@ -4,8 +4,15 @@ import ProductGrid from './ProductGrid';
 import ServiceTabs from './ServiceTabs';
 import GalleryGrid from './GalleryGrid';
 import CommunityForum from './CommunityForum';
+import { useNavigate } from 'react-router-dom';
 
 const HomePage = ({ addToCart }) => {
+  const navigate = useNavigate();
+
+  const handleBookService = (service) => {
+    navigate('/book', { state: { selectedService: service } });
+  };
+
   return (
     <div className="space-y-16">
       <section className="relative overflow-hidden py-20 px-4 rounded-3xl wood-texture">
@@ -38,7 +45,7 @@ const HomePage = ({ addToCart }) => {
 
       <section className="card p-12">
         <h3 className="text-3xl font-display font-bold mb-8 text-center">Our Services</h3>
-        <ServiceTabs />
+        <ServiceTabs onBookService={handleBookService} />
       </section>
 
       <section className="card p-12">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, Users } from 'lucide-react';
+import { Clock } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 interface Service {
   id: string;
@@ -11,19 +12,34 @@ interface Service {
 }
 
 interface BookingSystemProps {
-  selectedService: Service;
+  addToCart: (product: any) => void;
 }
 
 const availableTimeSlots = [
   '09:00', '11:00', '14:00', '16:00'
 ];
 
-const BookingSystem: React.FC<BookingSystemProps> = ({ selectedService }) => {
+const defaultService = {
+  id: 'default',
+  title: 'General Booking',
+  description: 'Book a session with us',
+  offerings: ['Individual Session', 'Group Session', 'Workshop', 'Custom Project'],
+  price: 'Starting from $49'
+};
+
+const BookingSystem: React.FC<BookingSystemProps> = ({ addToCart }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [participants, setParticipants] = useState(1);
   const [bookingStatus, setBookingStatus] = useState('');
   const [selectedOffering, setSelectedOffering] = useState('');
+
+  const selectedService = location.state?.selectedService || defaultService;
+
+  // Extract numeric price from string (e.g., "Starting from $49" -> 49)
+  const basePrice = parseInt(selectedService.price.match(/\d+/)[0]);
 
   // Reset form when service changes
   useEffect(() => {
@@ -43,36 +59,50 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ selectedService }) => {
       return;
     }
 
-    // Here you would typically make an API call to your backend
-    // For now, we'll just show a success message
-    setBookingStatus('success');
-  };
+    // Create booking product
+    const bookingProduct = {
+      id: `booking-${Date.now()}`,
+      name: `${selectedOffering} - ${selectedService.title}`,
+      description: `${selectedDate} at ${selectedTime} - ${participants} participant(s)`,
+      price: basePrice * participants,
+      image: 'https://images.unsplash.com/photo-1581591524425-c7e0978865fc?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+      type: 'booking',
+      bookingDetails: {
+        serviceId: selectedService.id,
+        offering: selectedOffering,
+        date: selectedDate,
+        time: selectedTime,
+        participants: participants
+      }
+    };
 
-  if (bookingStatus === 'success') {
-    return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="max-w-2xl mx-auto text-center space-y-6 p-8 bg-green-50 rounded-xl"
-      >
-        <div className="text-green-600 text-5xl mb-4">🎉</div>
-        <h3 className="text-2xl font-bold text-green-700">Booking Confirmed!</h3>
-        <p className="text-green-600">
-          Your {selectedOffering} session has been scheduled for {selectedDate} at {selectedTime}.
-        </p>
-        <p className="text-sm text-green-500">
-          A confirmation email will be sent to you shortly.
-        </p>
-      </motion.div>
-    );
-  }
+    // Add to cart
+    addToCart(bookingProduct);
+
+    // Reset form
+    setSelectedDate('');
+    setSelectedTime('');
+    setParticipants(1);
+    setSelectedOffering('');
+    setBookingStatus('success');
+
+    // Navigate back to services
+    navigate('/services');
+  };
 
   return (
     <div className="max-w-2xl mx-auto bg-white rounded-xl p-8 shadow-lg">
       <div className="text-center mb-8">
         <h3 className="text-2xl font-bold mb-2">Book {selectedService.title}</h3>
         <p className="text-gray-600">{selectedService.description}</p>
-        <p className="text-earth-600 font-semibold mt-2">{selectedService.price}</p>
+        <p className="text-earth-600 font-semibold mt-2">
+          Base price: {selectedService.price} per person
+        </p>
+        {participants > 1 && (
+          <p className="text-earth-600 font-semibold mt-1">
+            Total: ${basePrice * participants}
+          </p>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -162,9 +192,9 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ selectedService }) => {
           type="submit"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="w-full btn-primary mt-8"
+          className="w-full bg-earth-600 text-natural-100 py-4 rounded-lg font-medium hover:bg-earth-700 transition-colors"
         >
-          Confirm Booking
+          Add to Cart
         </motion.button>
       </form>
     </div>
