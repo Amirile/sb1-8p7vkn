@@ -8,18 +8,45 @@ import ServicesPage from './components/ServicesPage';
 import GalleryPage from './components/GalleryPage';
 import AboutPage from './components/AboutPage';
 import ContactPage from './components/ContactPage';
-import BookingSystem from './components/BookingSystem';
+import BookingRoute from './components/BookingRoute';
 import ArtistSubmission from './components/ArtistSubmission';
+import NotFoundPage from './components/NotFoundPage';
+
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  image?: string;
+  type?: string;
+  bookingDetails?: {
+    serviceId: string;
+    offering: string;
+    date: string;
+    time: string;
+    participants: number;
+  };
+}
+
+const navItems = [
+  { id: 'home', label: 'Home', path: '/' },
+  { id: 'shop', label: 'Shop', path: '/shop' },
+  { id: 'services', label: 'Services', path: '/services' },
+  { id: 'gallery', label: 'Gallery', path: '/gallery' },
+  { id: 'submit-art', label: 'Submit Art', path: '/submit-art' },
+  { id: 'about', label: 'About', path: '/about' },
+  { id: 'contact', label: 'Contact', path: '/contact' }
+];
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const addToCart = (product) => {
+  const addToCart = (product: Omit<CartItem, 'quantity'>) => {
     setCart(prevCart => {
       const existingItem = prevCart.find(item => item.id === product.id);
       if (existingItem) {
@@ -34,17 +61,17 @@ function App() {
 
   const cartTotal = cart.reduce((total, item) => total + item.price * item.quantity, 0);
 
-  const handleSearch = (e) => {
+  const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Searching for:', searchQuery);
     setIsSearchOpen(false);
   };
 
-  const removeFromCart = (productId) => {
+  const removeFromCart = (productId: string) => {
     setCart(prevCart => prevCart.filter(item => item.id !== productId));
   };
 
-  const updateQuantity = (productId, newQuantity) => {
+  const updateQuantity = (productId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
     setCart(prevCart =>
       prevCart.map(item =>
@@ -52,17 +79,6 @@ function App() {
       )
     );
   };
-
-  const navItems = [
-    { id: 'home', label: 'Home', path: '/' },
-    { id: 'shop', label: 'Shop', path: '/shop' },
-    { id: 'services', label: 'Services', path: '/services' },
-    { id: 'gallery', label: 'Gallery', path: '/gallery' },
-    { id: 'book', label: 'Book a Session', path: '/book' },
-    { id: 'submit-art', label: 'Submit Art', path: '/submit-art' },
-    { id: 'about', label: 'About', path: '/about' },
-    { id: 'contact', label: 'Contact', path: '/contact' }
-  ];
 
   return (
     <Router>
@@ -132,10 +148,11 @@ function App() {
             <Route path="/shop" element={<ShopPage addToCart={addToCart} />} />
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/gallery" element={<GalleryPage />} />
-            <Route path="/book" element={<BookingSystem addToCart={addToCart} />} />
+            <Route path="/book" element={<BookingRoute addToCart={addToCart} />} />
             <Route path="/submit-art" element={<ArtistSubmission />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact" element={<ContactPage />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </main>
 

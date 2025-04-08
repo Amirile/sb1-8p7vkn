@@ -1,36 +1,36 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import ServiceTabs from './ServiceTabs';
-import BookingSystem from './BookingSystem';
-import { AnimatePresence } from 'framer-motion';
+
+interface Offering {
+  id: string;
+  title: string;
+  description: string;
+  duration: string;
+  price: string;
+}
 
 const ServicesPage = () => {
-  const [showBooking, setShowBooking] = useState(false);
-  const [selectedService, setSelectedService] = useState(null);
+  const navigate = useNavigate();
 
-  const handleBookService = (service) => {
-    setSelectedService(service);
-    setShowBooking(true);
+  const handleBookService = (offering: Offering) => {
+    navigate('/book', { 
+      state: { 
+        selectedService: {
+          id: offering.id,
+          title: offering.title,
+          description: offering.description,
+          offerings: [offering],
+          price: offering.price
+        }
+      } 
+    });
   };
 
   return (
     <div className="space-y-8">
       <h2 className="text-4xl font-bold text-center mb-12">Our Services</h2>
-      
-      <AnimatePresence mode="wait">
-        {!showBooking ? (
-          <ServiceTabs onBookService={handleBookService} />
-        ) : (
-          <div className="space-y-6">
-            <button 
-              onClick={() => setShowBooking(false)}
-              className="btn-secondary mb-8"
-            >
-              ← Back to Services
-            </button>
-            <BookingSystem selectedService={selectedService} />
-          </div>
-        )}
-      </AnimatePresence>
+      <ServiceTabs onBookService={handleBookService} />
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Hammer, Scissors, PenTool, Palette, Code, Clock } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Hammer, Scissors, PenTool, Palette, Code, Clock, LucideIcon } from 'lucide-react';
 
 interface Offering {
   id: string;
@@ -12,11 +12,15 @@ interface Offering {
 
 interface Service {
   id: string;
-  icon: React.ComponentType;
+  icon: LucideIcon;
   title: string;
   description: string;
   offerings: Offering[];
   price: string;
+}
+
+interface ServiceTabsProps {
+  onBookService: (offering: Offering) => void;
 }
 
 const services: Service[] = [
@@ -24,35 +28,28 @@ const services: Service[] = [
     id: 'wood',
     icon: Hammer,
     title: 'Wood Crafts',
-    description: 'From delicate jewelry to custom furniture, we create unique wooden pieces with love and skill. Join our workshops to learn traditional woodworking techniques.',
+    description: 'From delicate jewelry to custom furniture, we create unique wooden pieces with love and skill.',
     offerings: [
       {
         id: 'wood-art',
         title: 'Custom wood art and decor',
-        description: 'Unique wooden art pieces and decorative items crafted to your specifications. Each piece is handmade with attention to detail and quality materials.',
+        description: 'Unique wooden art pieces and decorative items crafted to your specifications.',
         duration: '2-4 weeks',
         price: 'Starting at $199'
       },
       {
         id: 'wood-jewelry',
         title: 'Handcrafted wood jewelry',
-        description: 'Beautiful wooden jewelry pieces including necklaces, bracelets, and earrings. Made from exotic and local wood species.',
+        description: 'Beautiful wooden jewelry pieces including necklaces, bracelets, and earrings.',
         duration: '1-2 weeks',
         price: 'Starting at $39'
       },
       {
         id: 'wood-course',
         title: 'Weekend woodworking courses',
-        description: 'Learn the basics of woodworking in our weekend courses. Perfect for beginners wanting to start their woodworking journey.',
+        description: 'Learn the basics of woodworking in our weekend courses.',
         duration: '2 days',
         price: '$299 per person'
-      },
-      {
-        id: 'wood-furniture',
-        title: 'Custom furniture requests',
-        description: 'Commission custom furniture pieces designed and built to your specifications. From tables to cabinets, we bring your vision to life.',
-        duration: '4-8 weeks',
-        price: 'Starting at $899'
       }
     ],
     price: 'Starting at $39'
@@ -207,24 +204,10 @@ const services: Service[] = [
   }
 ];
 
-interface ServiceTabsProps {
-  onBookService: (service: Offering) => void;
-}
-
 const ServiceTabs: React.FC<ServiceTabsProps> = ({ onBookService }) => {
   const [activeTab, setActiveTab] = useState(services[0].id);
-  const [selectedOffering, setSelectedOffering] = useState<Offering | null>(null);
-
-  const handleBookNow = (service: Service, offering: Offering) => {
-    const bookingService = {
-      id: offering.id,
-      title: offering.title,
-      description: offering.description,
-      offerings: [offering.title],
-      price: offering.price
-    };
-    onBookService(bookingService);
-  };
+  
+  const activeService = services.find(service => service.id === activeTab) || services[0];
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -234,10 +217,7 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ onBookService }) => {
             key={service.id}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => {
-              setActiveTab(service.id);
-              setSelectedOffering(null);
-            }}
+            onClick={() => setActiveTab(service.id)}
             className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-colors ${
               activeTab === service.id
                 ? 'bg-earth-600 text-natural-100'
@@ -250,61 +230,47 @@ const ServiceTabs: React.FC<ServiceTabsProps> = ({ onBookService }) => {
         ))}
       </div>
 
-      <AnimatePresence mode="wait">
-        {services.map((service) => (
-          activeTab === service.id && (
+      <motion.div
+        key={activeService.id}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className="text-center space-y-6"
+      >
+        <activeService.icon className="w-16 h-16 mx-auto mb-4 text-earth-600" />
+        <h4 className="text-2xl font-display font-bold">{activeService.title}</h4>
+        <p className="text-natural-700 max-w-2xl mx-auto">{activeService.description}</p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto my-8">
+          {activeService.offerings.map((offering) => (
             <motion.div
-              key={service.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="text-center space-y-6"
+              key={offering.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              whileHover={{ scale: 1.02 }}
+              className="bg-white p-6 rounded-xl shadow-md border-2 border-natural-200 hover:border-earth-400 transition-colors"
             >
-              <service.icon className="w-16 h-16 mx-auto mb-4 text-earth-600" />
-              <h4 className="text-2xl font-display font-bold">{service.title}</h4>
-              <p className="text-natural-700 max-w-2xl mx-auto">{service.description}</p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto my-8">
-                {service.offerings.map((offering) => (
-                  <motion.div
-                    key={offering.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    whileHover={{ scale: 1.02 }}
-                    className={`bg-white p-6 rounded-xl shadow-md border-2 transition-colors cursor-pointer ${
-                      selectedOffering?.id === offering.id
-                        ? 'border-earth-600'
-                        : 'border-natural-200 hover:border-earth-400'
-                    }`}
-                    onClick={() => setSelectedOffering(offering)}
-                  >
-                    <h5 className="text-xl font-semibold mb-3">{offering.title}</h5>
-                    <p className="text-natural-600 mb-4">{offering.description}</p>
-                    <div className="flex items-center justify-between text-sm text-natural-500 mb-4">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        <span>{offering.duration}</span>
-                      </div>
-                      <span className="font-semibold text-earth-600">{offering.price}</span>
-                    </div>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleBookNow(service, offering);
-                      }}
-                      className="w-full bg-earth-600 text-natural-100 py-2 rounded-lg hover:bg-earth-700 transition-colors"
-                    >
-                      Book Now
-                    </motion.button>
-                  </motion.div>
-                ))}
+              <h5 className="text-xl font-semibold mb-3">{offering.title}</h5>
+              <p className="text-natural-600 mb-4">{offering.description}</p>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-1">
+                  <Clock className="w-4 h-4" />
+                  <span>{offering.duration}</span>
+                </div>
+                <span className="font-semibold text-earth-600">{offering.price}</span>
               </div>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => onBookService(offering)}
+                className="w-full mt-4 bg-earth-600 text-natural-100 py-2 rounded-lg hover:bg-earth-700 transition-colors"
+              >
+                Book Now
+              </motion.button>
             </motion.div>
-          )
-        ))}
-      </AnimatePresence>
+          ))}
+        </div>
+      </motion.div>
     </div>
   );
 };
