@@ -70,8 +70,13 @@ const services = [
   }
 ];
 
-const ServiceTabs = () => {
+const ServiceTabs = ({ onBookService }) => {
   const [activeTab, setActiveTab] = useState(services[0].id);
+
+  const handleBookNow = (serviceId) => {
+    const service = services.find(s => s.id === serviceId);
+    onBookService(service);
+  };
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -127,6 +132,7 @@ const ServiceTabs = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => handleBookNow(service.id)}
                 className="btn-primary mt-6"
               >
                 Book Now

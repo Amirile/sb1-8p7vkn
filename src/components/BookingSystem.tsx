@@ -1,112 +1,170 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, Users } from 'lucide-react';
 
-const services = [
-  { id: 'carpentry', name: 'Carpentry Workshop', duration: 120, price: 79 },
-  { id: 'painting', name: 'Painting Class', duration: 90, price: 59 },
-  { id: 'juggling', name: 'Juggling Lesson', duration: 60, price: 49 },
-  { id: 'software', name: 'Coding Workshop', duration: 120, price: 89 }
-];
+interface Service {
+  id: string;
+  title: string;
+  description: string;
+  offerings: string[];
+  price: string;
+}
+
+interface BookingSystemProps {
+  selectedService: Service;
+}
 
 const availableTimeSlots = [
   '09:00', '11:00', '14:00', '16:00'
 ];
 
-const BookingSystem = () => {
-  const [selectedService, setSelectedService] = useState('');
+const BookingSystem: React.FC<BookingSystemProps> = ({ selectedService }) => {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [participants, setParticipants] = useState(1);
+  const [bookingStatus, setBookingStatus] = useState('');
+  const [selectedOffering, setSelectedOffering] = useState('');
 
-  const handleSubmit = (e) => {
+  // Reset form when service changes
+  useEffect(() => {
+    setSelectedDate('');
+    setSelectedTime('');
+    setParticipants(1);
+    setBookingStatus('');
+    setSelectedOffering('');
+  }, [selectedService]);
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle booking submission
-    console.log({ selectedService, selectedDate, selectedTime, participants });
+    
+    // Validate form
+    if (!selectedDate || !selectedTime || !selectedOffering) {
+      setBookingStatus('Please select date, time, and the specific service you want to book.');
+      return;
+    }
+
+    // Here you would typically make an API call to your backend
+    // For now, we'll just show a success message
+    setBookingStatus('success');
   };
+
+  if (bookingStatus === 'success') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="max-w-2xl mx-auto text-center space-y-6 p-8 bg-green-50 rounded-xl"
+      >
+        <div className="text-green-600 text-5xl mb-4">🎉</div>
+        <h3 className="text-2xl font-bold text-green-700">Booking Confirmed!</h3>
+        <p className="text-green-600">
+          Your {selectedOffering} session has been scheduled for {selectedDate} at {selectedTime}.
+        </p>
+        <p className="text-sm text-green-500">
+          A confirmation email will be sent to you shortly.
+        </p>
+      </motion.div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto bg-white rounded-xl p-8 shadow-lg">
+      <div className="text-center mb-8">
+        <h3 className="text-2xl font-bold mb-2">Book {selectedService.title}</h3>
+        <p className="text-gray-600">{selectedService.description}</p>
+        <p className="text-earth-600 font-semibold mt-2">{selectedService.price}</p>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block text-lg font-medium mb-2">Choose Activity</label>
-          <div className="grid grid-cols-2 gap-4">
-            {services.map((service) => (
+          <label className="block text-lg font-medium mb-2">Select Service Type</label>
+          <div className="grid grid-cols-1 gap-4">
+            {selectedService.offerings.map((offering) => (
               <motion.button
-                key={service.id}
+                key={offering}
                 type="button"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => setSelectedService(service.id)}
+                onClick={() => setSelectedOffering(offering)}
                 className={`p-4 rounded-lg border-2 text-left ${
-                  selectedService === service.id
-                    ? 'border-green-600 bg-green-50'
-                    : 'border-gray-200 hover:border-green-400'
+                  selectedOffering === offering
+                    ? 'border-earth-600 bg-earth-50'
+                    : 'border-gray-200 hover:border-earth-400'
                 }`}
               >
-                <div className="font-medium">{service.name}</div>
-                <div className="text-sm text-gray-600">${service.price}</div>
-                <div className="text-sm text-gray-500">{service.duration} mins</div>
+                <div className="font-medium">{offering}</div>
               </motion.button>
             ))}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-lg font-medium mb-2">
-              <Calendar className="inline-block w-5 h-5 mr-2" />
-              Choose Date
-            </label>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full p-3 rounded-lg border-2 border-gray-200 focus:border-green-500"
-              min={new Date().toISOString().split('T')[0]}
-            />
-          </div>
+        <div>
+          <label className="block text-lg font-medium mb-2">Select Date</label>
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            min={new Date().toISOString().split('T')[0]}
+            className="w-full p-3 rounded-lg border-2 border-gray-200 focus:border-earth-500"
+            required
+          />
+        </div>
 
-          <div>
-            <label className="block text-lg font-medium mb-2">
-              <Clock className="inline-block w-5 h-5 mr-2" />
-              Choose Time
-            </label>
-            <select
-              value={selectedTime}
-              onChange={(e) => setSelectedTime(e.target.value)}
-              className="w-full p-3 rounded-lg border-2 border-gray-200 focus:border-green-500"
-            >
-              <option value="">Select a time</option>
-              {availableTimeSlots.map((time) => (
-                <option key={time} value={time}>{time}</option>
-              ))}
-            </select>
+        <div>
+          <label className="block text-lg font-medium mb-2">Choose Time</label>
+          <div className="grid grid-cols-2 gap-4">
+            {availableTimeSlots.map((time) => (
+              <motion.button
+                key={time}
+                type="button"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setSelectedTime(time)}
+                className={`p-4 rounded-lg border-2 text-left ${
+                  selectedTime === time
+                    ? 'border-earth-600 bg-earth-50'
+                    : 'border-gray-200 hover:border-earth-400'
+                }`}
+              >
+                <Clock className="w-5 h-5 mb-2" />
+                <div className="font-medium">{time}</div>
+              </motion.button>
+            ))}
           </div>
         </div>
 
         <div>
-          <label className="block text-lg font-medium mb-2">
-            <Users className="inline-block w-5 h-5 mr-2" />
-            Number of Participants
-          </label>
-          <input
-            type="number"
-            min="1"
-            max="6"
-            value={participants}
-            onChange={(e) => setParticipants(Number(e.target.value))}
-            className="w-full p-3 rounded-lg border-2 border-gray-200 focus:border-green-500"
-          />
+          <label className="block text-lg font-medium mb-2">Number of Participants</label>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => setParticipants(Math.max(1, participants - 1))}
+              className="p-2 rounded-lg border-2 border-gray-200 hover:border-earth-400"
+            >
+              -
+            </button>
+            <span className="text-xl font-medium w-12 text-center">{participants}</span>
+            <button
+              type="button"
+              onClick={() => setParticipants(Math.min(10, participants + 1))}
+              className="p-2 rounded-lg border-2 border-gray-200 hover:border-earth-400"
+            >
+              +
+            </button>
+          </div>
         </div>
+
+        {bookingStatus && bookingStatus !== 'success' && (
+          <p className="text-red-500 text-center">{bookingStatus}</p>
+        )}
 
         <motion.button
           type="submit"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="w-full bg-green-600 text-white py-4 rounded-lg font-medium hover:bg-green-700 transition-colors"
+          className="w-full btn-primary mt-8"
         >
-          Book Session
+          Confirm Booking
         </motion.button>
       </form>
     </div>
